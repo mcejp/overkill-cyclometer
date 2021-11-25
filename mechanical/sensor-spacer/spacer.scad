@@ -1,6 +1,6 @@
 /*[ Options ]*/
-// Sensor diameter
-SensorDiameter = 5;
+// Sensor groove diameter. Recommend sensor diameter + 2
+SensorGrooveDiameter = 8;
 
 // Holder length
 HolderLength = 30;
@@ -9,22 +9,22 @@ HolderLength = 30;
 HolderThickness = 12;
 
 // Distance
-Distance = 18;
+Distance = 11;
 
 // Bend radius
-BendRadius = 10;
+BendRadius = 25;
 
 // Number of grooves
 NumGrooves = 2;
 
-// Groove width
-GrooveWidth = 3;
+// Groove width. Recommend zip tie width + 1
+GrooveWidth = 6;
 
 // Groove depth
 GrooveDepth = 2;
 
 
-ClearanceNeeded = Distance + SensorDiameter + GrooveDepth;
+ClearanceNeeded = Distance + SensorGrooveDiameter + GrooveDepth;
 echo(ClearanceNeeded=ClearanceNeeded);
 
 difference() {
@@ -38,10 +38,10 @@ difference() {
     union() {
         // Sensor cut-out
         translate([0, 0, -HolderLength / 2])
-            cylinder(h=HolderLength * 2, d=SensorDiameter);
+            cylinder(h=HolderLength * 2, d=SensorGrooveDiameter);
         // Attachment cut-out
         translate([Distance + BendRadius, 0, -HolderLength / 2])
-            cylinder(h=HolderLength * 2, r=BendRadius);
+            cylinder(h=HolderLength * 2, r=BendRadius, $fn=50);
 
         // Cut-out grooves
         if (NumGrooves >= 1) {
@@ -55,7 +55,7 @@ difference() {
                     translate([0, GrooveY, GrooveZ])
                         cube([BboxX * 2, GrooveDepth, GrooveWidth], center=true);
                     // Diagonal cut
-                    CutWidth = HolderThickness / 2 - SensorDiameter / 2 - GrooveDepth / 2;
+                    CutWidth = HolderThickness / 2 - SensorGrooveDiameter / 2 - GrooveDepth / 2;
                     CutOuterY = y * (HolderThickness / 2 - GrooveDepth / 2);
                     translate([0, CutOuterY, GrooveZ])
                         rotate([0, 0, 45])
