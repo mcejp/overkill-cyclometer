@@ -1,15 +1,15 @@
 /*[ Options ]*/
 // Sensor groove diameter. Recommend sensor diameter + 2
-SensorGrooveDiameter = 8;
+SensorGrooveDiameter = 7.5;
 
-// Holder length
+// Holder length. Recommend equal to sensor length
 HolderLength = 30;
 
 // Holder thickness
 HolderThickness = 12;
 
 // Distance
-Distance = 11;
+Distance = 13;
 
 // Bend radius
 BendRadius = 25;
