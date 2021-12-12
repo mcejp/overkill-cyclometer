@@ -16,8 +16,9 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/generated_include)
 set(GENERATED_FONT_HEADERS)
 
 foreach(FONT curses_vector_8x12 curses_vector_32x48 Shizzle_1280x500)
+    # Alpha pre-multiply trick from https://legacy.imagemagick.org/discourse-server/viewtopic.php?p=98820&sid=43feb8dfb6e1458e62baec394189bb96#p98820
     add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated_include/${FONT}.h
-            COMMAND convert ${CMAKE_CURRENT_LIST_DIR}/assets/fonts/${FONT}.png -colorspace gray -depth 1 r:- | xxd -i > ${CMAKE_CURRENT_BINARY_DIR}/generated_include/${FONT}.h
+            COMMAND convert ${CMAKE_CURRENT_LIST_DIR}/assets/fonts/${FONT}.png \\\( +clone -alpha Extract \\\) -channel RGB -compose Multiply -composite -white-threshold 50% -colorspace gray -depth 1 r:- | xxd -i > ${CMAKE_CURRENT_BINARY_DIR}/generated_include/${FONT}.h
             MAIN_DEPENDENCY ${CMAKE_CURRENT_LIST_DIR}/assets/fonts/${FONT}.png)
 
     list(APPEND GENERATED_FONT_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/generated_include/${FONT}.h)

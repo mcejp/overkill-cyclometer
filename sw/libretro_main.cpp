@@ -186,7 +186,7 @@ void retro_run(void)
            events_owed -= 1.0f;
        }
        the_time += UPDATE_PERIOD_MS * 1000;
-       app::wakecycle(the_time, evb);
+       app::wakecycle(the_time, evb, app::SensorInputs { 20.0f });
        frame_cnt = 0;
    }
 

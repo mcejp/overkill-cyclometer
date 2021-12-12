@@ -23,19 +23,19 @@ static void adc_demo() {
     adc_set_temp_sensor_enabled(true);
     adc_select_input(4);
 
-    sleep_ms(1000);
-
-    for (int i = 0; i < 5; i++) {
-        // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
-        const float conversion_factor = 3.3f / (1 << 12);
-        uint16_t result = adc_read();
-        auto ADC_Voltage = result * conversion_factor;
-        auto T = 27 - (ADC_Voltage - 0.706f)/0.001721f;
-        printf("Raw value: 0x%03x, voltage: %f V, temp: %.1f degC\n", result, result * conversion_factor, T);
-        sleep_ms(500);
-    }
-
-    adc_set_temp_sensor_enabled(false);
+    //sleep_ms(1000);
+    //
+    //for (int i = 0; i < 5; i++) {
+    //    // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
+    //    const float conversion_factor = 3.3f / (1 << 12);
+    //    uint16_t result = adc_read();
+    //    auto ADC_Voltage = result * conversion_factor;
+    //    auto T = 27 - (ADC_Voltage - 0.706f)/0.001721f;
+    //    printf("Raw value: 0x%03x, voltage: %f V, temp: %.1f degC\n", result, result * conversion_factor, T);
+    //    sleep_ms(500);
+    //}
+    //
+    //adc_set_temp_sensor_enabled(false);
 }
 
 void platformSendCommand(unsigned char command) {
@@ -115,7 +115,7 @@ int main() {
     stdio_init_all();
     //sleep_ms(1000);
 
-    //adc_demo();
+    adc_demo();
 
     gpio_init(MY_INPUT_PIN);
     gpio_set_dir(MY_INPUT_PIN, GPIO_IN);
@@ -149,6 +149,14 @@ int main() {
         if (absolute_time_diff_us(next_wakeup, now) >= 0) {
             next_wakeup = delayed_by_ms(next_wakeup, UPDATE_PERIOD_MS);
 
+            // read temperature sensor
+            // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
+            const float conversion_factor = 3.3f / (1 << 12);
+            uint16_t result = adc_read();
+            auto ADC_Voltage = result * conversion_factor;
+            auto temp = 27 - (ADC_Voltage - 0.706f)/0.001721f;
+            //printf("Raw value: 0x%03x, voltage: %f V, temp: %.1f degC\n", result, result * conversion_factor, T);
+
             EventBuffer evb_snapshot;
 
             // TODO: is this C++-legal?
@@ -156,7 +164,7 @@ int main() {
             memcpy(&evb_snapshot, (const void*) &evb, sizeof(evb));
             restore_interrupts(ints);
 
-            app::wakecycle(to_us_since_boot(now), evb_snapshot);
+            app::wakecycle(to_us_since_boot(now), evb_snapshot, app::SensorInputs { temp });
         }
     }
 }

@@ -17,7 +17,7 @@ void init() {
     printf("bikECU v%s\n", VERSION_STRING);
 }
 
-void update_gui(float current_speed, float total_meters) {
+static void update_gui(float current_speed, float total_meters, SensorInputs const& inputs) {
     char buf[50];
 
     snprintf(buf, sizeof(buf), "%4.1f", current_speed);
@@ -40,13 +40,16 @@ void update_gui(float current_speed, float total_meters) {
     storage_get_debug_str(buf, sizeof(buf));
     puttextat(font8x12, 16 / 8 + 1, DISP_H - 16, buf);
 
+    snprintf(buf, sizeof(buf), "%2.0f\xf8" "C", inputs.temp_degC);
+    puttextat(font8x12, DISP_W / 8 - 4, DISP_H - 16, buf);
+
     // TODO: stateful widgets that recognize if/what they need to repaint as a result of newly assigned value
 }
 
 static uint64_t last_considered_event = 0;
 static optional<int> saved_last_interval_us;
 
-void wakecycle(TimeU64 now, EventBuffer const& events) {
+void wakecycle(TimeU64 now, EventBuffer const& events, SensorInputs const& inputs) {
     // count events since last considered
     // note that the event buffer is *not in order*
     uint64_t max_timestamp = 0;
@@ -117,12 +120,12 @@ void wakecycle(TimeU64 now, EventBuffer const& events) {
         const auto velocity_cm_per_hour = wheel_circumference_cm * 3'600'000 / (*last_interval_us / 1000);
         const auto velocity_m_per_hour = velocity_cm_per_hour / 100;
 
-        printf("%7d us interval / %5d m/h\n", *last_interval_us, velocity_m_per_hour);
-        app::update_gui(velocity_m_per_hour / 1000.0f, total_meters);
+        //printf("%7d us interval / %5d m/h\n", *last_interval_us, velocity_m_per_hour);
+        app::update_gui(velocity_m_per_hour / 1000.0f, total_meters, inputs);
     }
     else {
-        printf("------- us interval / ----- m/h\n");
-        app::update_gui(0.0f, total_meters);
+        //printf("------- us interval / ----- m/h\n");
+        app::update_gui(0.0f, total_meters, inputs);
     }
 
     /* Desired logic:
@@ -134,7 +137,7 @@ void wakecycle(TimeU64 now, EventBuffer const& events) {
         if (!last_saved.has_value()) {
             last_saved = now;
         }
-        else if (now - *last_saved >= 30'000'000) {
+        else if (now - *last_saved >= 30'000'000 || (now - *last_saved >= 10'000'000 && now - last_considered_event >= 3'000'000)) {
             printf("Saving total distance to flash.\n");
             last_saved = now;
             save_pending = false;
