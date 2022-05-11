@@ -44,6 +44,7 @@ if (PICO_SDK_PATH)
             hardware_adc
             hardware_flash
             hardware_i2c
+            pico_bootsel_via_double_reset
             pico_stdlib
             )
 
