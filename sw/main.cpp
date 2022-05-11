@@ -64,8 +64,8 @@ static void i2c_demo() {
     i2c_init(i2c, 400 * 1000);
 
     // Pins
-    const uint sda_pin = 8;
-    const uint scl_pin = 9;
+    const uint sda_pin = 12;
+    const uint scl_pin = 13;
 
     gpio_set_function(sda_pin, GPIO_FUNC_I2C);
     gpio_set_function(scl_pin, GPIO_FUNC_I2C);
@@ -86,8 +86,8 @@ static void i2c_demo() {
     printf("I2C demo done\n");
 }
 
-const uint LED_PIN = PICO_DEFAULT_LED_PIN;
-const uint MY_INPUT_PIN = 22;
+const uint LED_PIN = 6;
+const uint MY_INPUT_PIN = 25;
 
 static volatile EventBuffer evb;
 
