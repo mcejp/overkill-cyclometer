@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "storage.hpp"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -201,6 +202,8 @@ void retro_run(void)
 
 bool retro_load_game(const struct retro_game_info *info)
 {
+    bikECU_globals.rev_count = 12'345'678;
+
    app::init();
 
    enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
