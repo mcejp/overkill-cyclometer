@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "RP2040_Connect")(type "KiCad")(uri "${KIPRJMOD}/RP2040_Connect.pretty")(options "")(descr ""))
+  (lib (name "PCBway")(type "KiCad")(uri "${KIPRJMOD}")(options "")(descr ""))
+)
