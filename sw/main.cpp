@@ -93,10 +93,20 @@ static volatile EventBuffer evb;
 
 // https://github.com/raspberrypi/pico-examples/blob/master/gpio/hello_gpio_irq/hello_gpio_irq.c
 static void gpio_callback(uint gpio, uint32_t events) {
+    static uint64_t last_fall;
+
     gpio_put(LED_PIN, !gpio_get(MY_INPUT_PIN));
 
+    auto now = time_us_64();
+
     if (events & GPIO_IRQ_EDGE_FALL) {
-        auto now = time_us_64();
+        last_fall = now;
+    }
+    else if (events & GPIO_IRQ_EDGE_RISE) {
+        // ignore short glitches (threshold empirical)
+        if (now - last_fall < 20) {
+            return;
+        }
 
         static uint64_t last_timestamp = 0;
         static uint32_t idx = 0;
