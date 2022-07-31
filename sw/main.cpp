@@ -73,6 +73,7 @@ static void i2c_demo() {
     gpio_pull_up(scl_pin);
 
     SeeedGrayOled.init(SH1107G);             //initialize SEEED OLED display
+    sleep_ms(2000);
     SeeedGrayOled.clearDisplay();     //Clear Display.
     SeeedGrayOled.setNormalDisplay(); //Set Normal Display Mode
     SeeedGrayOled.setVerticalMode();  // Set to vertical mode for displaying text

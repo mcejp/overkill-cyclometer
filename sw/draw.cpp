@@ -30,6 +30,10 @@ static const uint8_t curses_vector_32x48_bitmap[] = {
 };
 const Font font32x48 = {curses_vector_32x48_bitmap, 32, 48, 512 / 8};
 
+extern const uint8_t splash_bitmap[] = {
+#include "splash.h"
+};
+
 void platformSendCommand(unsigned char command);
 void platformSendData(unsigned char data);
 

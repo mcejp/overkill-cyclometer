@@ -24,6 +24,10 @@ foreach(FONT curses_vector_8x12 curses_vector_32x48 Shizzle_1280x500)
     list(APPEND GENERATED_FONT_HEADERS ${CMAKE_CURRENT_BINARY_DIR}/generated_include/${FONT}.h)
 endforeach()
 
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated_include/splash.h
+        COMMAND convert ${CMAKE_CURRENT_LIST_DIR}/assets/splash.png \\\( +clone -alpha Extract \\\) -channel RGB -compose Multiply -composite -negate -white-threshold 50% -colorspace gray -depth 1 r:- | xxd -i > ${CMAKE_CURRENT_BINARY_DIR}/generated_include/splash.h
+        MAIN_DEPENDENCY ${CMAKE_CURRENT_LIST_DIR}/assets/splash.png)
+
 if (PICO_SDK_PATH)
     # Initialize the SDK
     pico_sdk_init()
@@ -38,6 +42,7 @@ if (PICO_SDK_PATH)
             storage.cpp
             storage.hpp
             ${GENERATED_FONT_HEADERS}
+            ${CMAKE_CURRENT_BINARY_DIR}/generated_include/splash.h
             )
 
     target_link_libraries(bikECU
@@ -65,6 +70,7 @@ else()
             storage.cpp
             storage.hpp
             ${GENERATED_FONT_HEADERS}
+            ${CMAKE_CURRENT_BINARY_DIR}/generated_include/splash.h
             )
 
     target_include_directories(bikECU_libretro PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated_include)

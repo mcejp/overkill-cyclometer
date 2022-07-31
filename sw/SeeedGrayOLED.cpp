@@ -30,6 +30,8 @@
 
 #include "pico/stdlib.h"
 
+extern const uint8_t splash_bitmap[];
+
 #if defined(__arm__) && !defined(PROGMEM)
     #define PROGMEM
     #define pgm_read_byte(STR) *STR
@@ -208,6 +210,9 @@ void SeeedGrayOLED::init(int IC) {
         sendCommand(0x1f);
         sendCommand(0xdb);  // Set Vcomh voltage
         sendCommand(0x27);
+
+        this->drawBitmap(splash_bitmap, 128 * 128 / 8);
+
         sendCommand(0xaf);  //Display ON
         sendCommand(0xb0);
         sendCommand(0x00);
