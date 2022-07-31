@@ -16,6 +16,7 @@ enum { FLASH_PAGE_SIZE = 256 };
 
 static inline uint8_t flash_magic[] = "\xAA" "bikECU\xBB";
 static inline size_t flash_offset = 256 * 1024;
+static inline size_t flash_num_sectors = 32;            // onboard flash is 16M, so there's no shortage
 const int FLASH_ERASE_PAGE_SIZE = FLASH_SECTOR_SIZE;
 const int FLASH_WRITE_PAGE_SIZE = FLASH_PAGE_SIZE;
 
@@ -45,7 +46,7 @@ static inline size_t Flash_record_real_size = 8;
 static_assert(sizeof(Flash_header) == FLASH_WRITE_PAGE_SIZE);
 static_assert(sizeof(Flash_record) == FLASH_WRITE_PAGE_SIZE);
 
-static inline int MAX_FLASH_RECORDS = (FLASH_ERASE_PAGE_SIZE - sizeof(Flash_header)) / sizeof(Flash_record);
+static inline int MAX_FLASH_RECORDS = (flash_num_sectors * FLASH_ERASE_PAGE_SIZE - sizeof(Flash_header)) / sizeof(Flash_record);
 
 bool flash_was_formatted = false;
 int flash_write_pos = 0;
@@ -61,7 +62,7 @@ static void format_flash() {
     hdr.header_checksum = 65535 - hdr.generation;
 
     uint32_t ints = save_and_disable_interrupts();
-    flash_range_erase(flash_offset, FLASH_ERASE_PAGE_SIZE);
+    flash_range_erase(flash_offset, FLASH_ERASE_PAGE_SIZE * flash_num_sectors);
     flash_range_program(flash_offset, (uint8_t const*) &hdr, sizeof(hdr));
     restore_interrupts(ints);
 

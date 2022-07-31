@@ -4,7 +4,7 @@
 - erase sector size: 4096 B
 - write page size: 256 B
 
-Currently only one sector is used.
+At the moment, 32 sectors are used.
 
 First page: header
 
