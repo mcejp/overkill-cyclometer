@@ -1,4 +1,5 @@
 #include "app.hpp"
+#include "devprop.hpp"
 #include "storage.hpp"
 #include "SeeedGrayOLED.h"
 
@@ -143,12 +144,17 @@ int main() {
 
     storage_init();
 
+    // init devprop
+    dp_node_init_bikECU(&inst);
+
     auto next_wakeup = get_absolute_time();
 
     //printf("entering app.\n");
     app::init();
 
     gpio_set_irq_enabled_with_callback(MY_INPUT_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
+
+    DevpropReceiver devprop;
 
     while (true) {
         // TODO: interrupt-driven wake up can save a tiny bit of power
@@ -176,6 +182,11 @@ int main() {
             restore_interrupts(ints);
 
             app::wakecycle(to_us_since_boot(now), evb_snapshot, app::SensorInputs { temp });
+        }
+
+        // Feed devprop receiver
+        for (int ch; (ch = getchar_timeout_us(0)) != PICO_ERROR_TIMEOUT; ) {
+            devprop.handle_recv(ch);
         }
     }
 }

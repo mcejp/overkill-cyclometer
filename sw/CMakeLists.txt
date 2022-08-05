@@ -43,6 +43,17 @@ if (PICO_SDK_PATH)
             storage.hpp
             ${GENERATED_FONT_HEADERS}
             ${CMAKE_CURRENT_BINARY_DIR}/generated_include/splash.h
+
+            # devprop stuff
+            generated/devprop_bikECU.c
+            generated/devprop_bikECU.h
+            devprop/cobs.c
+            devprop/cobs.h
+            devprop/devprop_can_ext_v1.c
+            devprop/devprop_can_ext_v1.h
+            devprop/devprop.h
+            devprop.cpp
+            devprop.hpp
             )
 
     target_link_libraries(bikECU
@@ -54,11 +65,16 @@ if (PICO_SDK_PATH)
             )
 
     pico_enable_stdio_usb(bikECU 1)
+    add_compile_definitions(PICO_STDIO_DEFAULT_CRLF=0)
 
     # create map/bin/hex file etc.
     pico_add_extra_outputs(bikECU)
 
-    target_include_directories(bikECU PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated_include)
+    target_include_directories(bikECU PRIVATE
+            devprop
+            generated
+            ${CMAKE_CURRENT_BINARY_DIR}/generated_include
+            )
 else()
     add_library(bikECU_libretro SHARED
             app.cpp

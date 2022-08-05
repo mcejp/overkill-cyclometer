@@ -11,6 +11,9 @@ namespace app {
 namespace {
     optional<TimeU64> last_saved;
     bool save_pending = false;
+
+    constexpr int wheel_diameter_cm = 70;
+    constexpr int wheel_circumference_cm = wheel_diameter_cm * 314 / 100;
 }
 
 void init() {
@@ -99,12 +102,10 @@ void wakecycle(TimeU64 now, EventBuffer const& events, SensorInputs const& input
     saved_last_interval_us = last_interval_us;
 
     // estimate speed
-    const int wheel_diameter_cm = 70;
-    const int wheel_circumference_cm = wheel_diameter_cm * 314 / 100;
     //const auto velocity_cm_per_second = num_events * wheel_circumference_cm;
     //const auto velocity_m_per_hour = velocity_cm_per_second * 3600 / 100;
 
-    printf("[%6d] %3d events / ", (int) (now / 1000), num_events);
+    // printf("[%6d] %3d events / ", (int) (now / 1000), num_events);
 
     if (num_events > 0) {
         bikECU_globals.rev_count += num_events;
@@ -144,6 +145,21 @@ void wakecycle(TimeU64 now, EventBuffer const& events, SensorInputs const& input
             storage_save_value(bikECU_globals.rev_count);
         }
     }
+}
+
+extern "C" uint32_t get_Distance_Total(int* error_out) {
+    float total_meters = bikECU_globals.rev_count * (wheel_circumference_cm / 100.0f);
+    return (uint32_t) total_meters;
+}
+
+extern "C" uint16_t get_Distance_Total_Raw(int* error_out) {
+    return bikECU_globals.rev_count;
+}
+
+extern "C" uint32_t set_Distance_Total_Raw(uint32_t value, int* error_out) {
+    // *error_out = DP_NOT_IMPLEMENTED;         TODO fix in GUI
+    bikECU_globals.rev_count = value;
+    return value;
 }
 
 }

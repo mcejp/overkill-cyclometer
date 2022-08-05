@@ -1,0 +1,14 @@
+device_name: bikECU
+properties:
+  - name: Distance.Total
+    type: readonly uint32
+    unit: m
+
+  - name: Distance.Total.Raw
+    type: uint32
+
+  - name: Storage.Capacity
+    type: readonly uint16
+
+  - name: Storage.WritePos
+    type: readonly uint16

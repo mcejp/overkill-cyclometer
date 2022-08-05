@@ -135,3 +135,11 @@ void storage_save_value(uint32_t value) {
 void storage_get_debug_str(char* buf, size_t bufsiz) {
     snprintf(buf, bufsiz, "%c%3d", flash_was_formatted ? 'F' : ' ', flash_write_pos);
 }
+
+extern "C" uint16_t get_Storage_Capacity(int* error_out) {
+    return MAX_FLASH_RECORDS;
+}
+
+extern "C" uint16_t get_Storage_WritePos(int* error_out) {
+    return flash_write_pos;
+}
