@@ -34,6 +34,9 @@ if (PICO_SDK_PATH)
 
     add_executable(bikECU
             app.cpp
+            clock.cpp
+            ds3231.cpp
+            ds3231.hpp
             draw.cpp
             draw.hpp
             main.cpp
