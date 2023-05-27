@@ -40,7 +40,8 @@ static void update_gui(float current_speed, float total_meters, SensorInputs con
         puttextat(font16x20, 0, DISP_H - 20, " ");
     }
 
-    storage_get_debug_str(buf, sizeof(buf));
+    //storage_get_debug_str(buf, sizeof(buf));
+    snprintf(buf, sizeof(buf), "%4.1fV", inputs.Vbat);
     puttextat(font8x12, 16 / 8 + 1, DISP_H - 16, buf);
 
     snprintf(buf, sizeof(buf), "%2.0f\xf8" "C", inputs.temp_degC);

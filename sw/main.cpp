@@ -13,30 +13,71 @@
 
 using std::optional;
 
-static void adc_demo() {
+enum {
+    ADC_IN_GPIO26,
+    ADC_IN_GPIO27,
+    ADC_IN_GPIO28,
+    ADC_IN_GPIO29,
+    ADC_IN_ONBOARD_TEMP,
+};
+
+const auto ADC_IN_VBAT = ADC_IN_GPIO26;
+const auto ADC_IN_IBAT = ADC_IN_GPIO27;
+
+// 12-bit conversion, assume max value == ADC_VREF == 3.3 V
+constexpr float ADC_TO_VOLTS = 3.3f / (1 << 12);
+
+// 30:10 kOhm voltage divider
+constexpr float VBAT_RECIPROCAL_CONVERSION_FACTOR = 1.0f / (10.0f / (10.0f + 30.0f));
+
+// 10 mOhm sensing resistor (instead of 20 mOhm as per schematic), 50x INA gain
+constexpr float IBAT_RECIPROCAL_CONVERSION_FACTOR = 1.0f / (0.010f * 50);
+
+static void init_adc() {
     adc_init();
 
     // Make sure GPIO is high-impedance, no pullups etc
-    //adc_gpio_init(26);
-    // Select ADC input 0 (GPIO26)
-    //adc_select_input(0);
+    // This actually matters! We get a wrong reading otherwise!
+    adc_gpio_init(26);
+    adc_gpio_init(27);
 
     adc_set_temp_sensor_enabled(true);
-    adc_select_input(4);
+}
 
-    //sleep_ms(1000);
-    //
-    //for (int i = 0; i < 5; i++) {
-    //    // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
-    //    const float conversion_factor = 3.3f / (1 << 12);
-    //    uint16_t result = adc_read();
-    //    auto ADC_Voltage = result * conversion_factor;
-    //    auto T = 27 - (ADC_Voltage - 0.706f)/0.001721f;
-    //    printf("Raw value: 0x%03x, voltage: %f V, temp: %.1f degC\n", result, result * conversion_factor, T);
-    //    sleep_ms(500);
-    //}
-    //
-    //adc_set_temp_sensor_enabled(false);
+static void adc_demo() {
+    adc_select_input(ADC_IN_ONBOARD_TEMP);
+    sleep_ms(100);
+
+    for (int i = 0; i < 5; i++) {
+        const uint16_t result = adc_read();
+        const auto ADC_Voltage = result * ADC_TO_VOLTS;
+        const auto T = 27 - (ADC_Voltage - 0.706f)/0.001721f;
+        printf("Raw value: 0x%03x, voltage: %f V, temp: %.1f degC\n", result, ADC_Voltage, T);
+        sleep_ms(500);
+    }
+
+    adc_set_temp_sensor_enabled(false);
+
+    adc_select_input(ADC_IN_VBAT);
+
+    for (int i = 0; i < 5; i++) {
+        const uint16_t result = adc_read();
+        const auto adc_volts = result * ADC_TO_VOLTS;
+        const auto V_bat = adc_volts * VBAT_RECIPROCAL_CONVERSION_FACTOR;
+        printf("V_bat raw value: 0x%03x, voltage: %f V, corrected: %f V\n", result, adc_volts, V_bat);
+        sleep_ms(200);
+    }
+
+    adc_select_input(ADC_IN_IBAT);
+
+    for (int i = 0; i < 5; i++) {
+        const uint16_t result = adc_read();
+        const auto adc_volts = result * ADC_TO_VOLTS;
+        const auto I_bat = adc_volts * IBAT_RECIPROCAL_CONVERSION_FACTOR;
+        printf("I_bat raw value: 0x%03x, voltage: %f V, corrected: %f A\n", result, adc_volts, I_bat);
+        sleep_ms(200);
+        //sleep_ms(800); i = 0;
+    }
 }
 
 void platformSendCommand(unsigned char command) {
@@ -127,7 +168,8 @@ int main() {
     stdio_init_all();
     //sleep_ms(1000);
 
-    adc_demo();
+    init_adc();
+    //adc_demo();
 
     gpio_init(MY_INPUT_PIN);
     gpio_set_dir(MY_INPUT_PIN, GPIO_IN);
@@ -167,12 +209,16 @@ int main() {
             next_wakeup = delayed_by_ms(next_wakeup, UPDATE_PERIOD_MS);
 
             // read temperature sensor
-            // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
-            const float conversion_factor = 3.3f / (1 << 12);
+            adc_select_input(ADC_IN_ONBOARD_TEMP);
             uint16_t result = adc_read();
-            auto ADC_Voltage = result * conversion_factor;
-            auto temp = 27 - (ADC_Voltage - 0.706f)/0.001721f;
+            auto adc_volts = result * ADC_TO_VOLTS;
+            auto temp = 27 - (adc_volts - 0.706f)/0.001721f;
             //printf("Raw value: 0x%03x, voltage: %f V, temp: %.1f degC\n", result, result * conversion_factor, T);
+
+            adc_select_input(ADC_IN_VBAT);
+            result = adc_read();
+            adc_volts = result * ADC_TO_VOLTS;
+            auto V_bat = adc_volts * VBAT_RECIPROCAL_CONVERSION_FACTOR;
 
             EventBuffer evb_snapshot;
 
@@ -181,7 +227,7 @@ int main() {
             memcpy(&evb_snapshot, (const void*) &evb, sizeof(evb));
             restore_interrupts(ints);
 
-            app::wakecycle(to_us_since_boot(now), evb_snapshot, app::SensorInputs { temp });
+            app::wakecycle(to_us_since_boot(now), evb_snapshot, app::SensorInputs { temp, V_bat });
         }
 
         // Feed devprop receiver

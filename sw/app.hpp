@@ -23,6 +23,7 @@ using TimeU64 = uint64_t;
 namespace app {
     struct SensorInputs {
         float temp_degC;
+        float Vbat;
     };
 
     void init();
