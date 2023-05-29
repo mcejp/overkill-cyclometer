@@ -14,6 +14,8 @@ dp_Node inst;
 static uint16_t crc16_kermit(uint8_t *ptr, size_t count);
 static void execute(uint8_t const* in_buf, size_t frame_length);
 
+void app_dump_storage();
+
 extern "C"
 void dp_user_send_message_ext(dp_Node* inst,
                               uint32_t id,
@@ -56,7 +58,14 @@ void DevpropReceiver::handle_recv(uint8_t b) {
         length = 0;
     }
     else if (length < sizeof(in_buf)) {
-        in_buf[length++] = b;
+        if (length >= 4 && memcmp(in_buf + length - 4, "dump", 4) == 0 && (b == '\r' || b == '\n')) {
+            printf("dumping storage\n");
+            app_dump_storage();
+            length = 0;
+        }
+        else {
+            in_buf[length++] = b;
+        }
     }
 }
 

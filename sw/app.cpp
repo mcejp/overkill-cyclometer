@@ -163,7 +163,12 @@ void wakecycle(TimeU64 now, EventBuffer const& events, SensorInputs const& input
             printf("Saving total distance to flash.\n");
             last_saved = now;
             save_pending = false;
-            storage_save_value(bikECU_globals.rev_count);
+
+            static int seq = 0;
+            auto now = platform::get_current_time();
+
+            storage_save_value(bikECU_globals.rev_count, seq, now);
+            seq++;
         }
     }
 }

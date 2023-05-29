@@ -25,7 +25,10 @@ Following pages: data records
 struct Flash_record {
     uint32_t value;
     uint32_t value_checksum;
-    uint8_t pad[FLASH_WRITE_PAGE_SIZE - 8];
+    uint16_t seq;
+    uint16_t year;
+    uint8_t month, day, hour, minute, second;
+    uint8_t pad[FLASH_WRITE_PAGE_SIZE - 17];
 };
 ```
 

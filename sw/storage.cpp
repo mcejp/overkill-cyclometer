@@ -38,10 +38,13 @@ Global_data bikECU_globals;
 struct Flash_record {
     uint32_t value;
     uint32_t value_checksum;
-    uint8_t pad[FLASH_WRITE_PAGE_SIZE - 8];
+    uint16_t seq;
+    uint16_t year;
+    uint8_t month, day, hour, minute, second;
+    uint8_t pad[FLASH_WRITE_PAGE_SIZE - 17];
 };
 
-static inline size_t Flash_record_real_size = 8;
+static inline size_t Flash_record_real_size = 17;
 
 static_assert(sizeof(Flash_header) == FLASH_WRITE_PAGE_SIZE);
 static_assert(sizeof(Flash_record) == FLASH_WRITE_PAGE_SIZE);
@@ -102,7 +105,7 @@ void storage_init() {
     }
 }
 
-void storage_save_value(uint32_t value) {
+void storage_save_value(uint32_t value, uint16_t seq, tm const& timestamp) {
     // TODO: check if FFFF, otherwise signal corruption & format flash
 
     if (flash_write_pos == MAX_FLASH_RECORDS) {
@@ -111,9 +114,17 @@ void storage_save_value(uint32_t value) {
         flash_write_pos = 0;
     }
 
-    Flash_record rec;
-    rec.value = value;
-    rec.value_checksum = 0x80000000 - rec.value;
+    Flash_record rec {
+        .value = value,
+        .value_checksum = 0x80000000 - rec.value,
+        .seq = seq,
+        .year = (uint16_t) timestamp.tm_year,
+        .month = (uint8_t) timestamp.tm_mon,
+        .day = (uint8_t) timestamp.tm_mday,
+        .hour = (uint8_t) timestamp.tm_hour,
+        .minute = (uint8_t) timestamp.tm_min,
+        .second = (uint8_t) timestamp.tm_sec,
+    };
 
     uint32_t ints = save_and_disable_interrupts();
     flash_range_program(flash_offset + sizeof(Flash_header) + flash_write_pos * FLASH_WRITE_PAGE_SIZE, (uint8_t const*) &rec, sizeof(rec));
@@ -121,8 +132,29 @@ void storage_save_value(uint32_t value) {
 
     flash_write_pos++;
 }
+
+void app_dump_storage() {
+    Flash_header hdr;
+    memcpy(&hdr, FLASH_READ_ADDR, sizeof(hdr));
+
+    for (int pos = 0; pos < MAX_FLASH_RECORDS; pos++) {
+        Flash_record rec;
+        memcpy(&rec, FLASH_READ_ADDR + sizeof(hdr) + pos * sizeof(Flash_record), Flash_record_real_size);
+
+        bool is_valid = (rec.value_checksum == 0x80000000 - rec.value);
+
+        if (is_valid) {
+            printf("{addr: %3d, seq: %5d, value: %3d, timestamp: \"%04d-%02d-%02dT%02d:%02d:%02d\"}\n", pos, rec.seq, rec.value,
+                   rec.year, rec.month, rec.day, rec.hour, rec.minute, rec.second);
+        }
+        else {
+            printf("record %d invalid, value %08X, chksum %08X\n", pos, rec.value, rec.value_checksum);
+            break;
+        }
+    }
+}
 #else
-void storage_save_value(uint32_t value) {
+void storage_save_value(uint32_t value, uint16_t seq, tm const& timestamp) {
     if (flash_write_pos == MAX_FLASH_RECORDS) {
         printf("storage_init: Storage exhausted, reformatting.\n");
         flash_write_pos = 0;
