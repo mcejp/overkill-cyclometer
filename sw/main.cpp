@@ -1,5 +1,6 @@
 #include "app.hpp"
 #include "devprop.hpp"
+#include "ds3231.hpp"
 #include "storage.hpp"
 #include "SeeedGrayOLED.h"
 
@@ -56,7 +57,7 @@ static void adc_demo() {
         sleep_ms(500);
     }
 
-    adc_set_temp_sensor_enabled(false);
+    //adc_set_temp_sensor_enabled(false);
 
     adc_select_input(ADC_IN_VBAT);
 
@@ -208,18 +209,6 @@ int main() {
         if (absolute_time_diff_us(next_wakeup, now) >= 0) {
             next_wakeup = delayed_by_ms(next_wakeup, UPDATE_PERIOD_MS);
 
-            // read temperature sensor
-            adc_select_input(ADC_IN_ONBOARD_TEMP);
-            uint16_t result = adc_read();
-            auto adc_volts = result * ADC_TO_VOLTS;
-            auto temp = 27 - (adc_volts - 0.706f)/0.001721f;
-            //printf("Raw value: 0x%03x, voltage: %f V, temp: %.1f degC\n", result, result * conversion_factor, T);
-
-            adc_select_input(ADC_IN_VBAT);
-            result = adc_read();
-            adc_volts = result * ADC_TO_VOLTS;
-            auto V_bat = adc_volts * VBAT_RECIPROCAL_CONVERSION_FACTOR;
-
             EventBuffer evb_snapshot;
 
             // TODO: is this C++-legal?
@@ -227,7 +216,7 @@ int main() {
             memcpy(&evb_snapshot, (const void*) &evb, sizeof(evb));
             restore_interrupts(ints);
 
-            app::wakecycle(to_us_since_boot(now), evb_snapshot, app::SensorInputs { temp, V_bat });
+            app::wakecycle(to_us_since_boot(now), evb_snapshot, app::SensorInputs {});
         }
 
         // Feed devprop receiver
@@ -238,3 +227,34 @@ int main() {
 }
 
 #pragma clang diagnostic pop
+
+float platform::get_ambient_temperature() {
+    adc_select_input(ADC_IN_ONBOARD_TEMP);
+    sleep_ms(20);
+
+    uint16_t result = adc_read();
+    auto adc_volts = result * ADC_TO_VOLTS;
+    return 27 - (adc_volts - 0.706f)/0.001721f;
+}
+
+tm platform::get_current_time() {
+    return ds3231::to_tm(ds3231::read_registers());
+}
+
+float platform::get_Ibat() {
+    adc_select_input(ADC_IN_IBAT);
+    sleep_ms(20);
+
+    auto result = adc_read();
+    auto adc_volts = result * ADC_TO_VOLTS;
+    return adc_volts * IBAT_RECIPROCAL_CONVERSION_FACTOR;
+}
+
+float platform::get_Vbat() {
+    adc_select_input(ADC_IN_VBAT);
+    sleep_ms(20);       // TODO: reference for this magic number?
+
+    auto result = adc_read();
+    auto adc_volts = result * ADC_TO_VOLTS;
+    return adc_volts * VBAT_RECIPROCAL_CONVERSION_FACTOR;
+}

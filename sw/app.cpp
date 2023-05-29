@@ -41,13 +41,33 @@ static void update_gui(float current_speed, float total_meters, SensorInputs con
     }
 
     //storage_get_debug_str(buf, sizeof(buf));
-    snprintf(buf, sizeof(buf), "%4.1fV", inputs.Vbat);
-    puttextat(font8x12, 16 / 8 + 1, DISP_H - 16, buf);
+    auto now = platform::get_current_time();
+    snprintf(buf, sizeof(buf), "%02d:%02d:%02d  ", now.tm_hour, now.tm_min, now.tm_sec);
+    puttextat(font8x12, 16 / 8 + 0, DISP_H - 16, buf);
 
-    snprintf(buf, sizeof(buf), "%2.0f\xf8" "C", inputs.temp_degC);
-    puttextat(font8x12, DISP_W / 8 - 4, DISP_H - 16, buf);
+    static int screen_counter = 0;
 
-    // TODO: stateful widgets that recognize if/what they need to repaint as a result of newly assigned value
+    // Show ambient temperature for 4 seconds
+    if (screen_counter < 8) {
+        snprintf(buf, sizeof(buf), "%2.0f\xf8" "C", platform::get_ambient_temperature());
+        puttextat(font8x12, DISP_W / 8 - 4, DISP_H - 16, buf);
+    }
+    // Show battery voltage for 4 seconds
+    else {
+        snprintf(buf, sizeof(buf), "%3.1fV", platform::get_Vbat());
+        puttextat(font8x12, DISP_W / 8 - 4, DISP_H - 16, buf);
+
+        // Current measurement not good at the moment
+        //snprintf(buf, sizeof(buf), "%4.2fA ", platform::get_Ibat());
+        //puttextat(font8x12, DISP_W / 8 - 6, DISP_H - 16, buf);
+    }
+
+    screen_counter++;
+    if (screen_counter >= 16) {
+        screen_counter = 0;
+    }
+
+    // TODO: consider stateful widgets that recognize if/what they need to repaint as a result of newly assigned value
 }
 
 static uint64_t last_considered_event = 0;

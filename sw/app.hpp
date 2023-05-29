@@ -1,5 +1,6 @@
 #include <optional>
 #include <stdint.h>
+#include <time.h>
 
 inline char VERSION_STRING[] = "1.1.0";
 
@@ -22,11 +23,16 @@ using TimeU64 = uint64_t;
 
 namespace app {
     struct SensorInputs {
-        float temp_degC;
-        float Vbat;
     };
 
     void init();
     //void update_gui(float current_speed, float total_meters);
     void wakecycle(TimeU64 now, EventBuffer const& events, SensorInputs const& inputs);
+}
+
+namespace platform {
+    float get_ambient_temperature();
+    tm get_current_time();
+    float get_Ibat();
+    float get_Vbat();
 }

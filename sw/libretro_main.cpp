@@ -187,10 +187,7 @@ void retro_run(void)
            events_owed -= 1.0f;
        }
        the_time += UPDATE_PERIOD_MS * 1000;
-       app::wakecycle(the_time, evb, app::SensorInputs {
-               20.0f,
-               8.76f,
-       });
+       app::wakecycle(the_time, evb, app::SensorInputs {});
        frame_cnt = 0;
    }
 
@@ -306,3 +303,19 @@ void setTextXY(unsigned char Row, unsigned char Column) {
     draw_column = Column;
 }
 
+float platform::get_ambient_temperature() {
+    return 20.0f;
+}
+
+tm platform::get_current_time() {
+    auto now = time(nullptr);
+    return *localtime(&now);
+}
+
+float platform::get_Ibat() {
+    return 1.023f;
+}
+
+float platform::get_Vbat() {
+    return 8.76f;
+}
