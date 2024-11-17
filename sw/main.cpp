@@ -132,6 +132,7 @@ static void i2c_demo() {
 
 const uint LED_PIN = 6;
 const uint MY_INPUT_PIN = 25;
+const uint AUX1_CTL_PIN = 29;
 
 static volatile EventBuffer evb;
 
@@ -171,6 +172,10 @@ int main() {
 
     init_adc();
     //adc_demo();
+
+    gpio_init(AUX1_CTL_PIN);
+    gpio_set_dir(AUX1_CTL_PIN, GPIO_OUT);
+    gpio_put(AUX1_CTL_PIN, 1);
 
     gpio_init(MY_INPUT_PIN);
     gpio_set_dir(MY_INPUT_PIN, GPIO_IN);
